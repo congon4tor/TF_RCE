@@ -1,0 +1,33 @@
+name: Terraform plan
+# Run steps on PR but using the base branch context
+on:
+  pull_request:
+    paths-ignore:
+      - '.github/**'
+env:
+  AWS_REGION: "eu-west-1"
+# permission can be added at job level or workflow level
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+jobs:
+  RunTFPlan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::649641712961:role/gha_tf_oidc_assume_role
+          role-session-name: samplerolesession
+          aws-region: ${{ env.AWS_REGION }}
+      # Run TF plan
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -no-color
